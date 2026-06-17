@@ -1,4 +1,7 @@
 /.claude
+CLAUDE.md
+.mcp.json
+boost.json
 /.phpunit.cache
 /bootstrap/ssr
 /node_modules
