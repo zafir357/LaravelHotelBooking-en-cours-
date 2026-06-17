@@ -18,11 +18,11 @@ interface Room {
 const rooms = ref<Room[]>([]);
 const loading = ref(true);
 
-const { user, fetchUser, logout } = useAuth();
+// "user" est partagé avec PublicLayout (qui appelle déjà fetchUser() au
+// montage) — pas besoin de le refaire ici, juste lire la valeur réactive.
+const { user } = useAuth();
 
 onMounted(async () => {
-    await fetchUser();
-
     try {
         const { data } = await axios.get('/api/rooms');
         rooms.value = data.data;
@@ -78,36 +78,10 @@ async function confirmBooking() {
 </script>
 
 <template>
-    <v-app>
-        <!-- Navigation -->
-        <v-app-bar color="white" elevation="1" height="72">
-            <v-container class="d-flex align-center">
-                <v-icon icon="mdi-bed-king-outline" size="28" color="primary" class="mr-2" />
-                <span class="text-h6 font-weight-bold">Maison Bellevue</span>
-
-                <v-spacer />
-
-                <v-btn variant="text" class="text-none mr-2" href="/rooms">Rooms</v-btn>
-                <v-btn variant="text" class="text-none mr-2" href="#about">About</v-btn>
-
-                <template v-if="user">
-                    <v-btn variant="text" class="text-none mr-2" href="/dashboard">My bookings</v-btn>
-                    <span class="text-body-2 mr-4">Hi, {{ user.name }}</span>
-                    <v-btn variant="outlined" class="text-none" rounded="lg" @click="logout">
-                        Log out
-                    </v-btn>
-                </template>
-
-                <template v-else>
-                    <v-btn variant="text" class="text-none mr-4" href="/login">Log in</v-btn>
-                    <v-btn color="primary" variant="flat" class="text-none" rounded="lg" href="/register">
-                        Book a stay
-                    </v-btn>
-                </template>
-            </v-container>
-        </v-app-bar>
-
-        <v-main>
+    <!-- Plus de <v-app>/<v-app-bar>/<v-footer> ici : PublicLayout.vue les
+         fournit désormais. Cette page ne contient plus que son propre
+         contenu, exactement comme une page enveloppée par AppLayout. -->
+    <div>
             <!-- Hero -->
             <v-sheet color="grey-darken-4" class="position-relative" style="overflow: hidden;">
                 <v-img
@@ -281,22 +255,6 @@ async function confirmBooking() {
                     Get started
                 </v-btn>
             </v-container>
-        </v-main>
-
-        <!-- Footer -->
-        <v-footer color="grey-darken-4" class="text-grey-lighten-1 py-8">
-            <v-container>
-                <v-row>
-                    <v-col cols="12" md="6" class="d-flex align-center">
-                        <v-icon icon="mdi-bed-king-outline" class="mr-2" />
-                        <span class="font-weight-bold text-white">Maison Bellevue</span>
-                    </v-col>
-                    <v-col cols="12" md="6" class="text-md-right text-body-2">
-                        © {{ new Date().getFullYear() }} Maison Bellevue. All rights reserved.
-                    </v-col>
-                </v-row>
-            </v-container>
-        </v-footer>
 
         <!-- Booking modal -->
         <v-dialog v-model="showBookingDialog" max-width="500">
@@ -333,7 +291,7 @@ async function confirmBooking() {
                 </v-card-actions>
             </v-card>
         </v-dialog>
-    </v-app>
+    </div>
 </template>
 
 <style scoped>

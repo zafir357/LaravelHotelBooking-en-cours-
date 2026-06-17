@@ -3,70 +3,20 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\ValidationException;
 
+// register()/login()/logout() ont été retirés : ils dupliquaient ce que
+// Fortify fait déjà via les routes de session classiques (POST /register,
+// POST /login, POST /logout, web group). Avant, ces deux systèmes
+// coexistaient sans se synchroniser — un utilisateur connecté via cette
+// API recevait un token Sanctum mais aucune session Laravel, donc tout
+// middleware "auth" côté web (ex: sur /dashboard) le traitait comme un
+// invité. Maintenant useAuth.ts (frontend) appelle directement les routes
+// Fortify, qui créent une vraie session — et grâce au mode stateful de
+// Sanctum (bootstrap/app.php), cette même session authentifie aussi /api/*.
 class AuthController extends Controller
 {
-     public function register(Request $request): JsonResponse
-    {
-        // Validation des champs d'inscription
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email', // unique = pas déjà pris
-            'password' => 'required|string|min:8|confirmed', // confirmed = doit matcher password_confirmation
-        ]);
-
-        $user = User::create([
-            'name'     => $request->name,
-            'email'    => $request->email,
-            'password' => Hash::make($request->password),
-        ]);
-
-        $user->sendEmailVerificationNotification();
-
-        $token = $user->createToken('api-token')->plainTextToken;
-
-        return response()->json([
-            'user'    => $user,
-            'token'   => $token,
-            'message' => 'Check your email to verify your account.',
-        ], 201);
-    }
-
-    public function login(Request $request): JsonResponse
-    {
-    $request->validate([
-        'email'    => 'required|email',
-        'password' => 'required',
-    ]);
-
-        $user = User::where('email', $request->email)->first();
-
-        if (!$user || !Hash::check($request->password, $user->password)) {
-            throw ValidationException::withMessages([
-                'email' => ['Invalid credentials.'],
-            ]);
-        }
-
-        $token = $user->createToken('api-token')->plainTextToken;
-
-        return response()->json([
-            'user' => $user,
-            'token' => $token,
-        ]);
-    }
-
-    public function logout(Request $request): JsonResponse
-    {
-        $request->user()->currentAccessToken()->delete();
-
-        return response()->json(['message' => 'Logged out.']);
-    }
-
     public function me(Request $request): JsonResponse
     {
         return response()->json($request->user());

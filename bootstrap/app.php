@@ -7,6 +7,7 @@ use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets;
 use Illuminate\Http\Request;
+use Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -23,6 +24,17 @@ return Application::configure(basePath: dirname(__DIR__))
             HandleAppearance::class,
             HandleInertiaRequests::class,
             AddLinkHeadersForPreloadedAssets::class,
+        ]);
+
+        // Sans ça, les routes /api/* sont "stateless" : elles ignorent
+        // complètement le cookie de session Laravel et n'acceptent qu'un
+        // token Bearer explicite. Cette middleware reconnaît les requêtes
+        // venant de notre propre frontend (domaines listés dans
+        // config/sanctum.php 'stateful') et les traite comme authentifiées
+        // via la session — c'est ce qui permet au login Fortify (session)
+        // ET aux appels /api/* de partager la même connexion.
+        $middleware->api(prepend: [
+            EnsureFrontendRequestsAreStateful::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

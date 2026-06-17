@@ -32,9 +32,9 @@ const rooms = ref<Room[]>([]);
 // "skeleton loaders" (rectangles gris animés) à la place des cartes de chambres.
 const loading = ref(true);
 
-// Récupère l'utilisateur connecté (ou null) — utilisé pour afficher "Hi, {name}"
-// dans la barre de navigation, et pour bloquer la réservation si pas connecté.
-const { user, fetchUser, logout } = useAuth();
+// "user" est partagé avec PublicLayout (qui appelle déjà fetchUser() au
+// montage) — utilisé ici uniquement pour bloquer la réservation si pas connecté.
+const { user } = useAuth();
 
 // Traduit le code technique stocké en base ("single", "double", "suite") en
 // libellé lisible affiché à l'utilisateur. Évite d'avoir des "if/else" dans le template.
@@ -127,12 +127,11 @@ watch(filters, () => {
     debounceTimer = setTimeout(fetchRooms, 400);
 }, { deep: true });
 
-// Au premier affichage de la page : on vérifie qui est connecté, puis on
-// charge la liste de chambres sans aucun filtre appliqué (filters est encore
-// à ses valeurs par défaut à ce stade).
-onMounted(async () => {
-    await fetchUser();
-    await fetchRooms();
+// Au premier affichage de la page : charge la liste de chambres sans aucun
+// filtre appliqué (filters est encore à ses valeurs par défaut à ce stade).
+// fetchUser() n'a plus besoin d'être appelé ici, PublicLayout s'en charge déjà.
+onMounted(() => {
+    fetchRooms();
 });
 
 const selectedRoom = ref<Room | null>(null);
@@ -192,38 +191,9 @@ async function confirmBooking() {
 </script>
 
 <template>
-    <v-app>
-        <!-- Navigation -->
-        <v-app-bar color="white" elevation="1" height="72">
-            <v-container class="d-flex align-center">
-                <v-icon icon="mdi-bed-king-outline" size="28" color="primary" class="mr-2" />
-                <span class="text-h6 font-weight-bold" style="cursor: pointer" @click="router.visit('/')">
-                    Maison Bellevue
-                </span>
-
-                <v-spacer />
-
-                <v-btn variant="text" class="text-none mr-2" href="/rooms">Rooms</v-btn>
-                <v-btn variant="text" class="text-none mr-2" href="/#about">About</v-btn>
-
-                <template v-if="user">
-                    <v-btn variant="text" class="text-none mr-2" href="/dashboard">My bookings</v-btn>
-                    <span class="text-body-2 mr-4">Hi, {{ user.name }}</span>
-                    <v-btn variant="outlined" class="text-none" rounded="lg" @click="logout">
-                        Log out
-                    </v-btn>
-                </template>
-
-                <template v-else>
-                    <v-btn variant="text" class="text-none mr-4" href="/login">Log in</v-btn>
-                    <v-btn color="primary" variant="flat" class="text-none" rounded="lg" href="/register">
-                        Book a stay
-                    </v-btn>
-                </template>
-            </v-container>
-        </v-app-bar>
-
-        <v-main>
+    <!-- Plus de <v-app>/<v-app-bar>/<v-footer> ici : PublicLayout.vue les
+         fournit désormais (même principe que Welcome.vue). -->
+    <div>
             <v-sheet color="grey-lighten-5">
                 <v-container class="py-10">
                     <div class="mb-8">
@@ -358,22 +328,6 @@ async function confirmBooking() {
                     </v-row>
                 </v-container>
             </v-sheet>
-        </v-main>
-
-        <!-- Footer -->
-        <v-footer color="grey-darken-4" class="text-grey-lighten-1 py-8">
-            <v-container>
-                <v-row>
-                    <v-col cols="12" md="6" class="d-flex align-center">
-                        <v-icon icon="mdi-bed-king-outline" class="mr-2" />
-                        <span class="font-weight-bold text-white">Maison Bellevue</span>
-                    </v-col>
-                    <v-col cols="12" md="6" class="text-md-right text-body-2">
-                        © {{ new Date().getFullYear() }} Maison Bellevue. All rights reserved.
-                    </v-col>
-                </v-row>
-            </v-container>
-        </v-footer>
 
         <!-- Booking modal -->
         <v-dialog v-model="showBookingDialog" max-width="500">
@@ -410,5 +364,5 @@ async function confirmBooking() {
                 </v-card-actions>
             </v-card>
         </v-dialog>
-    </v-app>
+    </div>
 </template>
