@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreRoomRequest;
 use App\Http\Resources\RoomResource;
+use App\Models\Room;
 use App\Services\RoomService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -49,6 +50,9 @@ class RoomController extends Controller
 
     public function destroy(int $id): \Illuminate\Http\JsonResponse
     {
+        $room = Room::findOrFail($id);
+        $this->authorize('delete', $room);
+
         $this->roomService->deleteRoom($id);
         return response()->json(['message' => 'Room deleted.']);
     }

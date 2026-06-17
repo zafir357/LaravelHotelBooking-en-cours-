@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Booking;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -12,7 +13,9 @@ class UpdateBookingRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return $this->user()->can('update', $this->booking);
+        $booking = Booking::find($this->route('booking'));
+
+        return $booking !== null && $this->user()->can('update', $booking);
     }
 
     public function rules(): array

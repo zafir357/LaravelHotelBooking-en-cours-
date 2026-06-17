@@ -33,8 +33,6 @@ class BookingController extends Controller
 
     public function store(StoreBookingRequest $request): BookingResource
     {
-        $this->authorize('create', Booking::class);
-
         $booking = $this->bookingService->createBooking([
             ...$request->validated(),
             'user_id' => auth()->id(),
@@ -45,9 +43,6 @@ class BookingController extends Controller
 
     public function update(UpdateBookingRequest $request, int $id): BookingResource
     {
-        $booking = $this->bookingService->findById($id);
-        $this->authorize('update', $booking);
-
         $booking = $this->bookingService->updateBooking($id, $request->validated());
         return new BookingResource($booking);
     }
