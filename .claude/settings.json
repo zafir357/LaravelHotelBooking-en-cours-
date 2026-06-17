@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node -e \"require\\('vuetify'\\); console.log\\('installed'\\)\")",
+      "mcp__laravel-boost__last-error",
+      "mcp__laravel-boost__read-log-entries",
+      "mcp__laravel-boost__database-query",
+      "Bash(\"C:\\\\Users\\\\Zafir\\\\.config\\\\herd\\\\bin\\\\herd.exe\" --version)",
+      "Bash(tasklist)",
+      "Bash(where herd *)",
+      "Read(//c/Users/Zafir/.config/herd/bin/**)",
+      "Read(//c/Users/Zafir/AppData/Local/Programs/**)",
+      "Bash(grep -E \"\\\\.\\(php\\)$\")",
+      "Bash(git init *)",
+      "Bash(git add *)"
+    ]
+  }
+}
