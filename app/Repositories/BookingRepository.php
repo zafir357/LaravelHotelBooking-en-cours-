@@ -8,6 +8,9 @@ use Illuminate\Support\Collection;
 
 class BookingRepository implements BookingRepositoryInterface
 {
+    /**
+     * @return Collection<int, Booking>
+     */
     public function all(): Collection
     {
         return Booking::with(['user', 'room', 'payment'])->get();
@@ -18,6 +21,9 @@ class BookingRepository implements BookingRepositoryInterface
         return Booking::with(['user', 'room', 'payment'])->findOrFail($id);
     }
 
+    /**
+     * @return Collection<int, Booking>
+     */
     public function findByUser(int $userId): Collection
     {
         return Booking::with(['room', 'payment'])
@@ -26,11 +32,17 @@ class BookingRepository implements BookingRepositoryInterface
             ->get();
     }
 
+    /**
+     * @param  array<string, mixed>  $data
+     */
     public function create(array $data): Booking
     {
         return Booking::create($data);
     }
 
+    /**
+     * @param  array<string, mixed>  $data
+     */
     public function update(int $id, array $data): Booking
     {
         $booking = Booking::findOrFail($id);

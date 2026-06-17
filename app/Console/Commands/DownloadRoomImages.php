@@ -12,6 +12,9 @@ class DownloadRoomImages extends Command
 
     protected $description = 'Download placeholder room images and store them in storage/app/public/rooms';
 
+    /**
+     * @var array<string, string>
+     */
     private array $images = [
         'standard-101.jpg' => 'https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=800&q=80',
         'double-202.jpg'   => 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&q=80',

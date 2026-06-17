@@ -9,6 +9,9 @@ use Illuminate\Support\Collection;
 
 class RoomRepository implements RoomRepositoryInterface
 {
+    /**
+     * @return Collection<int, Room>
+     */
     public function all(): Collection
     {
         return Room::all();
@@ -19,6 +22,9 @@ class RoomRepository implements RoomRepositoryInterface
         return Room::findOrFail($id);
     }
 
+/**
+ * @return Collection<int, Room>
+ */
 public function getAvailable(string $checkIn, string $checkOut): Collection
 {
     return Room::where('is_available', true)
@@ -44,6 +50,7 @@ public function getAvailable(string $checkIn, string $checkOut): Collection
      *
      * @param  array<string, mixed>  $filters  Les filtres bruts venant de la requête HTTP
      *                                          (ex: ['type' => 'suite', 'min_price' => 100])
+     * @return Collection<int, Room>
      */
     public function filter(array $filters): Collection
     {
@@ -82,11 +89,17 @@ public function getAvailable(string $checkIn, string $checkOut): Collection
             ->get();
     }
 
+    /**
+     * @param  array<string, mixed>  $data
+     */
     public function create(array $data): Room
     {
         return Room::create($data);
     }
 
+    /**
+     * @param  array<string, mixed>  $data
+     */
     public function update(int $id, array $data): Room
     {
         $room = Room::findOrFail($id);

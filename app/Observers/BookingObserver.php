@@ -3,6 +3,7 @@
 namespace App\Observers;
 
 use App\Models\Booking;
+use Illuminate\Support\Facades\Log;
 
 class BookingObserver
 {

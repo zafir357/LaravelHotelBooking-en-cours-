@@ -16,6 +16,9 @@ class StoreRoomRequest extends FormRequest
            return $this->user()->can('create', Room::class);
     }
 
+    /**
+     * @return array<string, ValidationRule|array<mixed>|string>
+     */
     public function rules(): array
     {
         return [

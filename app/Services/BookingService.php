@@ -16,16 +16,30 @@ class BookingService
         private RoomRepositoryInterface $roomRepository,
     ) {}
 
+    /**
+     * @return Collection<int, Booking>
+     */
     public function getAllBookings(): Collection
     {
         return $this->bookingRepository->all();
     }
 
+    public function findById(int $id): ?Booking
+    {
+        return $this->bookingRepository->findById($id);
+    }
+
+    /**
+     * @return Collection<int, Booking>
+     */
     public function getUserBookings(int $userId): Collection
     {
         return $this->bookingRepository->findByUser($userId);
     }
 
+    /**
+     * @param  array<string, mixed>  $data
+     */
     public function createBooking(array $data): Booking
     {
         $available = $this->roomRepository->getAvailable($data['check_in'], $data['check_out']);
@@ -52,6 +66,9 @@ class BookingService
         return $this->bookingRepository->update($id, ['status' => 'cancelled']);
     }
 
+    /**
+     * @param  array<string, mixed>  $data
+     */
     public function updateBooking(int $id, array $data): Booking
     {
         return $this->bookingRepository->update($id, $data);

@@ -12,11 +12,22 @@ class RoomService
         private RoomRepositoryInterface $roomRepository,
     ) {}
 
+    /**
+     * @return Collection<int, Room>
+     */
     public function getAllRooms(): Collection
     {
         return $this->roomRepository->all();
     }
 
+    public function findById(int $id): ?Room
+    {
+        return $this->roomRepository->findById($id);
+    }
+
+    /**
+     * @return Collection<int, Room>
+     */
     public function getAvailableRooms(string $checkIn, string $checkOut): Collection
     {
         return $this->roomRepository->getAvailable($checkIn, $checkOut);
@@ -31,17 +42,24 @@ class RoomService
     // par ce Service, qui lui reste la seule porte d'entrée vers les données des chambres.
     /**
      * @param  array<string, mixed>  $filters
+     * @return Collection<int, Room>
      */
     public function filterRooms(array $filters): Collection
     {
         return $this->roomRepository->filter($filters);
     }
 
+    /**
+     * @param  array<string, mixed>  $data
+     */
     public function createRoom(array $data): Room
     {
         return $this->roomRepository->create($data);
     }
 
+    /**
+     * @param  array<string, mixed>  $data
+     */
     public function updateRoom(int $id, array $data): Room
     {
         return $this->roomRepository->update($id, $data);

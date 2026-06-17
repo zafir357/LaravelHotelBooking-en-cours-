@@ -18,6 +18,9 @@ class UpdateBookingRequest extends FormRequest
         return $booking !== null && $this->user()->can('update', $booking);
     }
 
+    /**
+     * @return array<string, ValidationRule|array<mixed>|string>
+     */
     public function rules(): array
     {
         return [

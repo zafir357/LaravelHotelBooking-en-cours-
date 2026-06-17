@@ -48,7 +48,7 @@ class RoomController extends Controller
 
     public function show(int $id): RoomResource
     {
-        $room = $this->roomService->getAllRooms()->find($id);
+        $room = $this->roomService->findById($id);
         return new RoomResource($room);
     }
 

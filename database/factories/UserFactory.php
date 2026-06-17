@@ -4,6 +4,7 @@ namespace Database\Factories;
 
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
@@ -46,5 +47,19 @@ class UserFactory extends Factory
     /**
      * Indicate that the model has two-factor authentication configured.
      */
-    public function withTwoFactor(): static {}
+    public function withTwoFactor(): static
+    {
+        // Avant ce fix : la méthode ne retournait rien (null), donc
+        // User::factory()->withTwoFactor()->create() plantait dès qu'on
+        // appelait ->create() sur null. Des valeurs de test suffisent ici
+        // (le test ne décode jamais le secret, il vérifie juste le flux
+        // de redirection vers l'écran de saisie du code 2FA).
+        return $this->state(fn (array $attributes) => [
+            'two_factor_secret' => encrypt(Str::random(16)),
+            'two_factor_recovery_codes' => encrypt(json_encode(
+                Collection::times(8, fn () => Str::random(10))
+            )),
+            'two_factor_confirmed_at' => now(),
+        ]);
+    }
 }

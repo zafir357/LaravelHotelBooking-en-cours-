@@ -23,7 +23,7 @@ class BookingController extends Controller
 
         // Admin et receptionist voient tout, guest voit les siennes
         if (auth()->user()->isGuest()) {
-            $bookings = $this->bookingService->getUserBookings(auth()->id());
+            $bookings = $this->bookingService->getUserBookings(auth()->user()->id);
         } else {
             $bookings = $this->bookingService->getAllBookings();
         }
