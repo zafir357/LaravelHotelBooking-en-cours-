@@ -34,6 +34,7 @@ createInertiaApp({
             // page publique du même genre devrait aussi être ajoutée ici.
             case name === 'Welcome':
             case name === 'Rooms':
+            case name === 'staff/Bookings':
                 return PublicLayout;
             case name === 'auth/Login':
                 return null;

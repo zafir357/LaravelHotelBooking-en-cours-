@@ -37,7 +37,14 @@ class BookingRepository implements BookingRepositoryInterface
      */
     public function create(array $data): Booking
     {
-        return Booking::create($data);
+        // ->fresh() : sans ça, l'objet retourné ne contient QUE les champs
+        // qu'on a explicitement passés dans $data (room_id, check_in...).
+        // "status" n'en fait pas partie (il vient du défaut 'pending' de la
+        // colonne en base) — donc l'objet en mémoire avait status = null
+        // juste après création, même si la ligne en base était correcte.
+        // fresh() relit la ligne depuis la base pour avoir toutes les vraies
+        // valeurs, y compris celles appliquées par défaut côté SQL.
+        return Booking::create($data)->fresh();
     }
 
     /**

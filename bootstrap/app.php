@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\EnsureUserHasRole;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
 use Illuminate\Foundation\Application;
@@ -19,6 +20,11 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
            $middleware->redirectGuestsTo('/login');
         $middleware->encryptCookies(except: ['appearance', 'sidebar_state']);
+
+        // Permet d'écrire ->middleware('role:admin,receptionist') sur une route.
+        $middleware->alias([
+            'role' => EnsureUserHasRole::class,
+        ]);
 
         $middleware->web(append: [
             HandleAppearance::class,

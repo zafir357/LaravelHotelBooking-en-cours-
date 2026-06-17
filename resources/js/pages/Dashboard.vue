@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { router } from '@inertiajs/vue3';
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useAuth } from '@/composables/useAuth';
 import api from '@/lib/api';
 
@@ -33,6 +33,20 @@ const statusColors: Record<string, string> = {
     cancelled: 'error',
     completed: 'grey',
 };
+
+// computed() = recalculé automatiquement chaque fois que "bookings" change
+// (ex: après cancelBooking()), sans qu'on ait besoin de le refaire à la main.
+// Trois groupes plutôt que deux : on ne voulait pas perdre la visibilité sur
+// les réservations passées (annulées/terminées) en les faisant disparaître.
+const pendingBookings = computed(() =>
+    bookings.value.filter((b) => b.status === 'pending'),
+);
+const confirmedBookings = computed(() =>
+    bookings.value.filter((b) => b.status === 'confirmed'),
+);
+const historyBookings = computed(() =>
+    bookings.value.filter((b) => b.status === 'cancelled' || b.status === 'completed'),
+);
 
 onMounted(async () => {
     // 1. Vérifie l'authentification — si pas de token valide, redirige
@@ -110,51 +124,118 @@ async function cancelBooking(id: number) {
                     </v-col>
                 </v-row>
 
-                <!-- Liste des réservations -->
-                <v-row v-else>
-                    <v-col v-for="booking in bookings" :key="booking.id" cols="12" md="6">
-                        <v-card elevation="0" rounded="lg" class="d-flex">
-                            <v-img
-                                :src="booking.room.images?.[0] || '/storage/rooms/placeholder.jpg'"
-                                width="140"
-                                cover
-                                class="flex-shrink-0"
-                            />
-                            <div class="flex-grow-1">
-                                <v-card-item>
-                                    <div class="d-flex align-center justify-space-between">
-                                        <v-card-title class="pa-0">{{ booking.room.name }}</v-card-title>
-                                        <v-chip
-                                            size="small"
-                                            :color="statusColors[booking.status]"
-                                            variant="tonal"
-                                        >
-                                            {{ booking.status }}
-                                        </v-chip>
+                <template v-else>
+                    <!-- Section 1 : en attente de validation par le staff
+                         (receptionist/admin) — voir /staff/bookings. -->
+                    <div v-if="pendingBookings.length" class="mb-8">
+                        <h2 class="text-h6 font-weight-bold mb-3">Pending approval</h2>
+                        <v-row>
+                            <v-col v-for="booking in pendingBookings" :key="booking.id" cols="12" md="6">
+                                <v-card elevation="0" rounded="lg" class="d-flex">
+                                    <v-img
+                                        :src="booking.room.images?.[0] || '/storage/rooms/placeholder.jpg'"
+                                        width="140"
+                                        cover
+                                        class="flex-shrink-0"
+                                    />
+                                    <div class="flex-grow-1">
+                                        <v-card-item>
+                                            <div class="d-flex align-center justify-space-between">
+                                                <v-card-title class="pa-0">{{ booking.room.name }}</v-card-title>
+                                                <v-chip size="small" :color="statusColors[booking.status]" variant="tonal">
+                                                    {{ booking.status }}
+                                                </v-chip>
+                                            </div>
+                                            <v-card-subtitle class="pa-0 mt-1">
+                                                {{ booking.check_in }} → {{ booking.check_out }}
+                                            </v-card-subtitle>
+                                        </v-card-item>
+
+                                        <v-card-text class="pt-0">
+                                            <span class="text-h6 font-weight-bold">{{ booking.total_price }} €</span>
+                                        </v-card-text>
+
+                                        <v-card-actions>
+                                            <v-btn size="small" color="error" variant="text" @click="cancelBooking(booking.id)">
+                                                Cancel
+                                            </v-btn>
+                                        </v-card-actions>
                                     </div>
-                                    <v-card-subtitle class="pa-0 mt-1">
-                                        {{ booking.check_in }} → {{ booking.check_out }}
-                                    </v-card-subtitle>
-                                </v-card-item>
+                                </v-card>
+                            </v-col>
+                        </v-row>
+                    </div>
 
-                                <v-card-text class="pt-0">
-                                    <span class="text-h6 font-weight-bold">{{ booking.total_price }} €</span>
-                                </v-card-text>
+                    <!-- Section 2 : validées par le staff — prêtes pour le séjour. -->
+                    <div v-if="confirmedBookings.length" class="mb-8">
+                        <h2 class="text-h6 font-weight-bold mb-3">Booking validated</h2>
+                        <v-row>
+                            <v-col v-for="booking in confirmedBookings" :key="booking.id" cols="12" md="6">
+                                <v-card elevation="0" rounded="lg" class="d-flex">
+                                    <v-img
+                                        :src="booking.room.images?.[0] || '/storage/rooms/placeholder.jpg'"
+                                        width="140"
+                                        cover
+                                        class="flex-shrink-0"
+                                    />
+                                    <div class="flex-grow-1">
+                                        <v-card-item>
+                                            <div class="d-flex align-center justify-space-between">
+                                                <v-card-title class="pa-0">{{ booking.room.name }}</v-card-title>
+                                                <v-chip size="small" :color="statusColors[booking.status]" variant="tonal">
+                                                    {{ booking.status }}
+                                                </v-chip>
+                                            </div>
+                                            <v-card-subtitle class="pa-0 mt-1">
+                                                {{ booking.check_in }} → {{ booking.check_out }}
+                                            </v-card-subtitle>
+                                        </v-card-item>
 
-                                <v-card-actions v-if="booking.status === 'pending'">
-                                    <v-btn
-                                        size="small"
-                                        color="error"
-                                        variant="text"
-                                        @click="cancelBooking(booking.id)"
-                                    >
-                                        Cancel
-                                    </v-btn>
-                                </v-card-actions>
-                            </div>
-                        </v-card>
-                    </v-col>
-                </v-row>
+                                        <v-card-text class="pt-0">
+                                            <span class="text-h6 font-weight-bold">{{ booking.total_price }} €</span>
+                                        </v-card-text>
+                                    </div>
+                                </v-card>
+                            </v-col>
+                        </v-row>
+                    </div>
+
+                    <!-- Section 3 : historique (annulées/terminées) — pas demandé
+                         explicitement, mais on évite de faire disparaître ces
+                         réservations sans aucune trace nulle part. -->
+                    <div v-if="historyBookings.length">
+                        <h2 class="text-h6 font-weight-bold mb-3 text-medium-emphasis">History</h2>
+                        <v-row>
+                            <v-col v-for="booking in historyBookings" :key="booking.id" cols="12" md="6">
+                                <v-card elevation="0" rounded="lg" class="d-flex" style="opacity: 0.7">
+                                    <v-img
+                                        :src="booking.room.images?.[0] || '/storage/rooms/placeholder.jpg'"
+                                        width="140"
+                                        cover
+                                        class="flex-shrink-0"
+                                    />
+                                    <div class="flex-grow-1">
+                                        <v-card-item>
+                                            <div class="d-flex align-center justify-space-between">
+                                                <v-card-title class="pa-0">{{ booking.room.name }}</v-card-title>
+                                                <v-chip size="small" :color="statusColors[booking.status]" variant="tonal">
+                                                    {{ booking.status }}
+                                                </v-chip>
+                                            </div>
+                                            <v-card-subtitle class="pa-0 mt-1">
+                                                {{ booking.check_in }} → {{ booking.check_out }}
+                                            </v-card-subtitle>
+                                        </v-card-item>
+
+                                        <v-card-text class="pt-0">
+                                            <span class="text-h6 font-weight-bold">{{ booking.total_price }} €</span>
+                                        </v-card-text>
+                                    </div>
+                                </v-card>
+                            </v-col>
+                        </v-row>
+                    </div>
+                </template>
             </v-container>
         </v-main>
     </v-app>

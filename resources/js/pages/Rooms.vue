@@ -195,7 +195,11 @@ async function confirmBooking() {
          fournit désormais (même principe que Welcome.vue). -->
     <div>
             <v-sheet color="grey-lighten-5">
-                <v-container class="py-10">
+                <!-- fluid = retire la largeur max par défaut de Vuetify
+                     (~1280px) qui laissait un grand espace vide à droite sur
+                     les écrans larges. La page prend maintenant toute la
+                     largeur disponible. -->
+                <v-container fluid class="py-10 px-6">
                     <div class="mb-8">
                         <div class="text-overline text-primary mb-1">Accommodation</div>
                         <h1 class="text-h4 font-weight-bold">All rooms &amp; suites</h1>
@@ -288,9 +292,17 @@ async function confirmBooking() {
                                             cover
                                         />
                                         <v-card-item>
-                                            <div class="d-flex align-center justify-space-between">
-                                                <v-card-title class="pa-0">{{ room.name }}</v-card-title>
-                                                <v-chip size="small" color="primary" variant="tonal">
+                                            <!-- align-start (pas align-center) + flex-wrap : permet au
+                                                 titre de chambre de passer sur 2 lignes si besoin sans
+                                                 écraser le chip à côté. v-card-title a par défaut
+                                                 white-space: nowrap + ellipsis (une seule ligne tronquée
+                                                 "..."), d'où "Chambre Double 2..." avant ce fix — l'override
+                                                 inline style="white-space: normal" l'annule explicitement. -->
+                                            <div class="d-flex align-start justify-space-between ga-2">
+                                                <v-card-title class="pa-0" style="white-space: normal; line-height: 1.3;">
+                                                    {{ room.name }}
+                                                </v-card-title>
+                                                <v-chip size="small" color="primary" variant="tonal" class="shrink-0 mt-1">
                                                     {{ typeLabels[room.type] ?? room.type }}
                                                 </v-chip>
                                             </div>

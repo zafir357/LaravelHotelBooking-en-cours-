@@ -12,6 +12,23 @@ class Booking extends Model
     /** @use HasFactory<\Database\Factories\BookingFactory> */
     use HasFactory;
 
+    // Sans ça, Booking::create($data) — utilisé par BookingRepository::create(),
+    // donc par TOUTE création de réservation côté guest, et par les approbations
+    // staff (status update) — levait une MassAssignmentException. La création
+    // de réservation était donc cassée en pratique, pas seulement dans nos tests.
+    /**
+     * @var list<string>
+     */
+    protected $fillable = [
+        'user_id',
+        'room_id',
+        'check_in',
+        'check_out',
+        'total_price',
+        'status',
+        'notes',
+    ];
+
     /**
      * @var array<string, string>
      */

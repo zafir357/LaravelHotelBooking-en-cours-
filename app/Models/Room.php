@@ -11,6 +11,23 @@ class Room extends Model
     /** @use HasFactory<\Database\Factories\RoomFactory> */
     use HasFactory;
 
+    // Même bug que sur Booking : sans $fillable, Room::create($data) (utilisé
+    // par RoomRepository::create(), donc StoreRoomRequest/RoomController::store())
+    // levait une MassAssignmentException — la création de chambre par un admin
+    // était cassée en pratique.
+    /**
+     * @var list<string>
+     */
+    protected $fillable = [
+        'name',
+        'type',
+        'description',
+        'price_per_night',
+        'capacity',
+        'is_available',
+        'images',
+    ];
+
     protected $casts = [
     'images' => 'array',
     'is_available' => 'boolean',

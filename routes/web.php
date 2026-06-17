@@ -31,6 +31,14 @@ Route::inertia('/dashboard', 'Dashboard')
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
 
+// Page de gestion des réservations pour le personnel (admin + receptionist).
+// 'role:admin,receptionist' bloque tout autre rôle AVANT même d'atteindre la
+// page Vue — un guest qui tente l'URL directement reçoit un 403, ça ne
+// dépend pas d'une vérification côté client qu'on pourrait contourner.
+Route::inertia('/staff/bookings', 'staff/Bookings')
+    ->middleware(['auth', 'verified', 'role:admin,receptionist'])
+    ->name('staff.bookings');
+
 // Vérification email — vérifie manuellement sans session ni token
 Route::get('/email/verify/{id}/{hash}', function (Request $request, string $id, string $hash) {
 
