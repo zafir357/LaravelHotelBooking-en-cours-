@@ -22,6 +22,21 @@ class RoomService
         return $this->roomRepository->getAvailable($checkIn, $checkOut);
     }
 
+    // Le Service ne contient AUCUNE logique de filtrage lui-même — il se contente
+    // de transmettre les filtres au Repository. Pourquoi cette couche existe alors ?
+    // C'est ici qu'on ajouterait, plus tard, une logique métier qui ne concerne pas
+    // directement la base de données : par exemple "si l'utilisateur n'est pas connecté,
+    // cacher le prix exact" ou "logger chaque recherche pour des statistiques".
+    // Le Controller ne parle jamais directement au Repository : il passe toujours
+    // par ce Service, qui lui reste la seule porte d'entrée vers les données des chambres.
+    /**
+     * @param  array<string, mixed>  $filters
+     */
+    public function filterRooms(array $filters): Collection
+    {
+        return $this->roomRepository->filter($filters);
+    }
+
     public function createRoom(array $data): Room
     {
         return $this->roomRepository->create($data);

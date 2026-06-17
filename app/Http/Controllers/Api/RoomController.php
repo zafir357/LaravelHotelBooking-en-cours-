@@ -16,12 +16,22 @@ class RoomController extends Controller
         private RoomService $roomService,
     ) {}
 
+    // Endpoint appelé par Welcome.vue (aperçu homepage) ET par Rooms.vue (page
+    // avec filtres) — un seul endpoint suffit car le comportement s'adapte
+    // automatiquement à la présence ou non de paramètres de filtre dans l'URL.
     public function index(Request $request): AnonymousResourceCollection
     {
-        if ($request->has(['check_in', 'check_out'])) {
-            $rooms = $this->roomService->getAvailableRooms(
-                $request->check_in,
-                $request->check_out
+        // hasAny() vérifie si AU MOINS UN de ces paramètres est présent dans
+        // l'URL (ex: GET /api/rooms?type=suite). Welcome.vue appelle l'API sans
+        // aucun de ces paramètres -> on tombe dans le "else" et on retourne tout.
+        // Rooms.vue, lui, envoie toujours au moins un de ces champs (même vide)
+        // dès que l'utilisateur touche un filtre -> on passe par filterRooms().
+        if ($request->hasAny(['type', 'min_price', 'max_price', 'capacity', 'check_in', 'check_out'])) {
+            // only() extrait UNIQUEMENT ces clés de la requête, en ignorant tout
+            // le reste — par sécurité, on ne veut jamais transmettre des paramètres
+            // arbitraires non prévus jusqu'à la requête SQL du Repository.
+            $rooms = $this->roomService->filterRooms(
+                $request->only(['type', 'min_price', 'max_price', 'capacity', 'check_in', 'check_out'])
             );
         } else {
             $rooms = $this->roomService->getAllRooms();

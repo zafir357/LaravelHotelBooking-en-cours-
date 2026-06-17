@@ -87,7 +87,7 @@ async function confirmBooking() {
 
                 <v-spacer />
 
-                <v-btn variant="text" class="text-none mr-2" href="#rooms">Rooms</v-btn>
+                <v-btn variant="text" class="text-none mr-2" href="/rooms">Rooms</v-btn>
                 <v-btn variant="text" class="text-none mr-2" href="#about">About</v-btn>
 
                 <template v-if="user">
@@ -136,7 +136,7 @@ async function confirmBooking() {
                                         variant="flat"
                                         rounded="lg"
                                         class="text-none px-6"
-                                        href="#rooms"
+                                        href="/rooms"
                                     >
                                         Explore rooms
                                     </v-btn>
@@ -194,8 +194,14 @@ async function confirmBooking() {
                         </v-col>
                     </v-row>
 
+                    <!-- La homepage ne montre qu'un APERÇU de 3 chambres, jamais
+                         toute la liste — même si l'API a renvoyé plus de résultats.
+                         slice(0, 3) coupe le tableau aux 3 premiers éléments sans
+                         modifier "rooms" lui-même (slice ne mute pas l'original,
+                         contrairement à splice). La liste complète avec filtres
+                         vit sur la page /rooms (Rooms.vue). -->
                     <v-row v-else-if="rooms.length">
-                        <v-col v-for="room in rooms" :key="room.id" cols="12" md="4">
+                        <v-col v-for="room in rooms.slice(0, 3)" :key="room.id" cols="12" md="4">
                             <v-card elevation="0" rounded="lg" class="h-100 d-flex flex-column">
                                 <v-img
                                     :src="room.images?.[0] || '/storage/rooms/placeholder.jpg'"
@@ -239,6 +245,25 @@ async function confirmBooking() {
                             No rooms available at the moment.
                         </v-col>
                     </v-row>
+
+                    <!-- Bouton "View more" : visible seulement s'il y a au moins
+                         une chambre à montrer (sinon ça n'aurait aucun sens
+                         d'inviter à "voir plus" sur une liste vide). Lien simple
+                         <a href> plutôt qu'un <Link> Inertia ici, car /rooms est
+                         une page Inertia complète (pas un fragment), donc un
+                         rechargement de page classique convient. -->
+                    <div v-if="rooms.length" class="text-center mt-10">
+                        <v-btn
+                            size="large"
+                            variant="outlined"
+                            color="primary"
+                            rounded="lg"
+                            class="text-none px-8"
+                            href="/rooms"
+                        >
+                            View more rooms
+                        </v-btn>
+                    </div>
                 </v-container>
             </v-sheet>
 

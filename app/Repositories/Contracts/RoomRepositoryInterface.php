@@ -10,6 +10,11 @@ interface RoomRepositoryInterface
     public function all(): Collection;
     public function findById(int $id): ?Room;
     public function getAvailable(string $checkIn, string $checkOut): Collection;
+
+    /**
+     * @param  array<string, mixed>  $filters
+     */
+    public function filter(array $filters): Collection;
     public function create(array $data): Room;
     public function update(int $id, array $data): Room;
     public function delete(int $id): bool;
