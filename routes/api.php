@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BookingController;
+use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\RoomController;
 
 // Routes publiques
@@ -19,6 +20,9 @@ Route::get('/rooms/{id}', [RoomController::class, 'show']);
 // par le login Fortify.
 Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::get('/me', [AuthController::class, 'me']);
+
+    // Étape 1 du paiement : crée le PaymentIntent Stripe AVANT la réservation.
+    Route::post('/payments/intent', [PaymentController::class, 'store']);
 
     Route::apiResource('bookings', BookingController::class);
 

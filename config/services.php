@@ -35,4 +35,12 @@ return [
         ],
     ],
 
+    // Clé "secret" (sk_test_...) utilisée UNIQUEMENT côté serveur — jamais
+    // exposée au frontend. La clé "publishable" (pk_test_...) va, elle,
+    // dans .env sous VITE_STRIPE_KEY pour être accessible au JS (le préfixe
+    // VITE_ est ce qui dit à Vite "expose cette variable au bundle frontend").
+    'stripe' => [
+        'key' => env('STRIPE_SECRET'),
+    ],
+
 ];

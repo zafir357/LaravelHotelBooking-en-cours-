@@ -3,7 +3,7 @@ import axios from 'axios';
 import { ref, onMounted } from 'vue';
 import { router } from '@inertiajs/vue3';
 import { useAuth } from '@/composables/useAuth';
-import api from '@/lib/api';
+import BookingDialog from '@/components/BookingDialog.vue';
 
 interface Room {
     id: number;
@@ -39,11 +39,10 @@ const typeLabels: Record<string, string> = {
 
 const selectedRoom = ref<Room | null>(null);
 const showBookingDialog = ref(false);
-const checkIn = ref('');
-const checkOut = ref('');
-const bookingError = ref('');
-const bookingLoading = ref(false);
 
+// Tout le flow paiement (intent Stripe -> carte -> confirmation) vit
+// maintenant dans BookingDialog.vue, partagé avec Rooms.vue — avant, ce
+// bloc dupliquait presque mot pour mot le même code dans les deux pages.
 function openBooking(room: Room) {
     if (!user.value) {
         router.visit('/login');
@@ -51,29 +50,6 @@ function openBooking(room: Room) {
     }
     selectedRoom.value = room;
     showBookingDialog.value = true;
-}
-
-async function confirmBooking() {
-    bookingError.value = '';
-    bookingLoading.value = true;
-
-    try {
-        await api.post('/bookings', {
-            room_id: selectedRoom.value?.id,
-            check_in: checkIn.value,
-            check_out: checkOut.value,
-        });
-
-        showBookingDialog.value = false;
-        router.visit('/dashboard');
-    } catch (e: any) {
-        const errors = e.response?.data?.errors;
-        bookingError.value = errors
-            ? Object.values(errors).flat().join(' ')
-            : 'Booking failed.';
-    } finally {
-        bookingLoading.value = false;
-    }
 }
 </script>
 
@@ -256,41 +232,7 @@ async function confirmBooking() {
                 </v-btn>
             </v-container>
 
-        <!-- Booking modal -->
-        <v-dialog v-model="showBookingDialog" max-width="500">
-            <v-card rounded="lg" class="pa-4">
-                <v-card-title>Book {{ selectedRoom?.name }}</v-card-title>
-
-                <v-card-text>
-                    <v-alert v-if="bookingError" type="error" density="compact" class="mb-4">
-                        {{ bookingError }}
-                    </v-alert>
-
-                    <v-text-field
-                        v-model="checkIn"
-                        label="Check-in"
-                        type="date"
-                        variant="outlined"
-                        class="mb-2"
-                    />
-                    <v-text-field
-                        v-model="checkOut"
-                        label="Check-out"
-                        type="date"
-                        variant="outlined"
-                        class="mb-2"
-                    />
-                </v-card-text>
-
-                <v-card-actions>
-                    <v-spacer />
-                    <v-btn variant="text" @click="showBookingDialog = false">Cancel</v-btn>
-                    <v-btn color="primary" variant="flat" :loading="bookingLoading" @click="confirmBooking">
-                        Confirm
-                    </v-btn>
-                </v-card-actions>
-            </v-card>
-        </v-dialog>
+        <BookingDialog v-model="showBookingDialog" :room="selectedRoom" />
     </div>
 </template>
 

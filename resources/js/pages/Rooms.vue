@@ -11,7 +11,7 @@ import axios from 'axios';
 import { ref, onMounted, watch } from 'vue';
 import { router } from '@inertiajs/vue3';
 import { useAuth } from '@/composables/useAuth';
-import api from '@/lib/api';
+import BookingDialog from '@/components/BookingDialog.vue';
 
 // Décrit la forme des données qu'on reçoit de l'API /api/rooms (via RoomResource
 // côté Laravel). TypeScript nous avertira si on essaie d'accéder à un champ
@@ -136,16 +136,9 @@ onMounted(() => {
 
 const selectedRoom = ref<Room | null>(null);
 const showBookingDialog = ref(false);
-const checkIn = ref('');
-const checkOut = ref('');
-const bookingError = ref('');
-const bookingLoading = ref(false);
 
-// Clic sur "Book now" sur une carte de chambre. On ne peut pas réserver sans
-// compte — donc si personne n'est connecté, on redirige directement vers /login
-// au lieu d'ouvrir la modale (évite d'afficher un formulaire inutile à un visiteur
-// qui devra de toute façon se connecter avant que l'API n'accepte sa réservation —
-// rappel : StoreBookingRequest::authorize() exige $this->user()->can('create', ...)).
+// Tout le flow paiement (intent Stripe -> carte -> confirmation) vit dans
+// BookingDialog.vue, partagé avec Welcome.vue.
 function openBooking(room: Room) {
     if (!user.value) {
         router.visit('/login');
@@ -153,40 +146,6 @@ function openBooking(room: Room) {
     }
     selectedRoom.value = room;
     showBookingDialog.value = true;
-}
-
-// Soumission du formulaire de la modale de réservation.
-async function confirmBooking() {
-    // On reset l'erreur précédente à chaque tentative, sinon un vieux message
-    // d'erreur resterait affiché même après correction par l'utilisateur.
-    bookingError.value = '';
-    bookingLoading.value = true;
-
-    try {
-        // "api" (pas "axios") car cette route nécessite d'être authentifié —
-        // le composable api.ts attache automatiquement le token/cookie de session,
-        // contrairement à axios utilisé plus haut pour /api/rooms qui est public.
-        await api.post('/bookings', {
-            room_id: selectedRoom.value?.id,
-            check_in: checkIn.value,
-            check_out: checkOut.value,
-        });
-
-        showBookingDialog.value = false;
-        // Redirige vers le dashboard pour que l'utilisateur voie immédiatement
-        // sa nouvelle réservation dans la liste, au lieu de rester sur /rooms.
-        router.visit('/dashboard');
-    } catch (e: any) {
-        // Laravel renvoie les erreurs de validation sous la forme
-        // { errors: { check_in: ['...'], check_out: ['...'] } } en cas d'échec
-        // de StoreBookingRequest::rules(). On les aplatit en un seul message lisible.
-        const errors = e.response?.data?.errors;
-        bookingError.value = errors
-            ? Object.values(errors).flat().join(' ')
-            : 'Booking failed.';
-    } finally {
-        bookingLoading.value = false;
-    }
 }
 </script>
 
@@ -341,40 +300,6 @@ async function confirmBooking() {
                 </v-container>
             </v-sheet>
 
-        <!-- Booking modal -->
-        <v-dialog v-model="showBookingDialog" max-width="500">
-            <v-card rounded="lg" class="pa-4">
-                <v-card-title>Book {{ selectedRoom?.name }}</v-card-title>
-
-                <v-card-text>
-                    <v-alert v-if="bookingError" type="error" density="compact" class="mb-4">
-                        {{ bookingError }}
-                    </v-alert>
-
-                    <v-text-field
-                        v-model="checkIn"
-                        label="Check-in"
-                        type="date"
-                        variant="outlined"
-                        class="mb-2"
-                    />
-                    <v-text-field
-                        v-model="checkOut"
-                        label="Check-out"
-                        type="date"
-                        variant="outlined"
-                        class="mb-2"
-                    />
-                </v-card-text>
-
-                <v-card-actions>
-                    <v-spacer />
-                    <v-btn variant="text" @click="showBookingDialog = false">Cancel</v-btn>
-                    <v-btn color="primary" variant="flat" :loading="bookingLoading" @click="confirmBooking">
-                        Confirm
-                    </v-btn>
-                </v-card-actions>
-            </v-card>
-        </v-dialog>
+        <BookingDialog v-model="showBookingDialog" :room="selectedRoom" />
     </div>
 </template>

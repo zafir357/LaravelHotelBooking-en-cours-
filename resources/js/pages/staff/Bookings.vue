@@ -54,21 +54,11 @@ async function fetchBookings() {
 
 onMounted(fetchBookings);
 
-// "Approve" = passer une réservation de pending à confirmed. Autorisé pour
-// admin ET receptionist (BookingPolicy::update() accepte les deux tant que
-// le statut actuel est pending ou confirmed).
-async function approveBooking(booking: Booking) {
-    actionError.value = '';
-
-    try {
-        await api.patch(`/bookings/${booking.id}`, { status: 'confirmed' });
-        booking.status = 'confirmed';
-    } catch (e: any) {
-        actionError.value = e.response?.data?.message ?? 'Action failed.';
-    }
-}
-
 // "Mark completed" = confirmed -> completed, typiquement après le séjour.
+// Plus de bouton "Approve" ici : depuis l'intégration Stripe, une réservation
+// n'existe en base QUE si le paiement a déjà réussi (voir
+// BookingService::createBooking()) — elle est créée directement "confirmed",
+// il n'y a plus d'étape d'approbation manuelle à faire.
 async function completeBooking(booking: Booking) {
     actionError.value = '';
 
@@ -151,18 +141,6 @@ async function cancelBooking(booking: Booking) {
 
                             <v-divider />
                             <v-card-actions class="px-4 py-3 flex-wrap ga-2">
-                                <v-btn
-                                    v-if="booking.status === 'pending'"
-                                    size="small"
-                                    color="success"
-                                    variant="flat"
-                                    rounded="lg"
-                                    class="text-none"
-                                    @click="approveBooking(booking)"
-                                >
-                                    Approve
-                                </v-btn>
-
                                 <v-btn
                                     v-if="booking.status === 'confirmed'"
                                     size="small"

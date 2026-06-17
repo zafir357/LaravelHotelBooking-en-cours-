@@ -44,9 +44,13 @@ class BookingPolicy
             return in_array($booking->status, ['pending', 'confirmed']);
         }
 
-        // Guest peut modifier seulement la sienne si pending
+        // Guest peut modifier seulement la sienne, tant qu'elle n'est pas
+        // déjà terminée/annulée. "pending" reste listé pour compatibilité —
+        // ce statut n'apparaît plus dans le flow normal depuis que le
+        // paiement Stripe confirme directement la réservation, mais la
+        // colonne existe toujours dans l'enum pour d'éventuelles évolutions futures.
         return $user->id === $booking->user_id
-            && $booking->status === 'pending';
+            && in_array($booking->status, ['pending', 'confirmed']);
     }
 
     // Annuler une réservation
@@ -63,8 +67,9 @@ class BookingPolicy
             return in_array($booking->status, ['pending', 'confirmed']);
         }
 
-        // Guest peut annuler seulement la sienne si pending
+        // Guest peut annuler seulement la sienne, tant qu'elle n'est pas
+        // déjà terminée/annulée (voir commentaire similaire dans update()).
         return $user->id === $booking->user_id
-            && $booking->status === 'pending';
+            && in_array($booking->status, ['pending', 'confirmed']);
     }
 }
