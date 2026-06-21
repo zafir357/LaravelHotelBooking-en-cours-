@@ -8,7 +8,7 @@ use App\Models\User;
 class BookingPolicy
 {
     // Voir la liste des réservations — appelé pour TOUT utilisateur listant
-    // des réservations, pas seulement admin/receptionist. Le filtrage
+    // des réservations, pas seulement receptionist. Le filtrage
     // "toutes" vs "les siennes uniquement" est fait dans
     // BookingController::index() (selon $user->isGuest()), pas ici : cette
     // permission ne décide que "a-t-il le droit de lister, point" — d'où
@@ -22,8 +22,7 @@ class BookingPolicy
     // Voir une réservation spécifique
     public function view(User $user, Booking $booking): bool
     {
-        return $user->isAdmin()
-            || $user->isReceptionist()
+        return $user->isReceptionist()
             || $user->id === $booking->user_id;
     }
 
@@ -36,10 +35,6 @@ class BookingPolicy
     // Modifier une réservation (status, notes)
     public function update(User $user, Booking $booking): bool
     {
-        if ($user->isAdmin()) {
-            return true;
-        }
-
         if ($user->isReceptionist()) {
             return in_array($booking->status, ['pending', 'confirmed']);
         }
@@ -56,10 +51,6 @@ class BookingPolicy
     // Annuler une réservation
     public function delete(User $user, Booking $booking): bool
     {
-        if ($user->isAdmin()) {
-            return true;
-        }
-
         // Receptionist peut annuler, mais pas une réservation déjà terminée
         // (même contrainte que pour update() — une fois "completed", plus
         // aucune action de gestion n'a de sens dessus).

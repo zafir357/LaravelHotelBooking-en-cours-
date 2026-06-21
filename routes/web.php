@@ -1,9 +1,10 @@
 <?php
 
+use App\Http\Controllers\SetPasswordController;
+use App\Models\User;
 use Illuminate\Auth\Events\Verified;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Models\User;
 
 // Route::inertia() est un raccourci : pas besoin d'un Controller qui fait juste
 // "return Inertia::render(...)". Laravel rend directement le composant Vue indiqué
@@ -31,13 +32,29 @@ Route::inertia('/dashboard', 'Dashboard')
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
 
-// Page de gestion des réservations pour le personnel (admin + receptionist).
-// 'role:admin,receptionist' bloque tout autre rôle AVANT même d'atteindre la
-// page Vue — un guest qui tente l'URL directement reçoit un 403, ça ne
-// dépend pas d'une vérification côté client qu'on pourrait contourner.
-Route::inertia('/staff/bookings', 'staff/Bookings')
-    ->middleware(['auth', 'verified', 'role:admin,receptionist'])
-    ->name('staff.bookings');
+// Pages de gestion pour le personnel (receptionist — il n'y a plus de rôle
+// admin séparé, la réceptionniste a tous les pouvoirs de gestion).
+// 'role:receptionist' bloque tout autre rôle AVANT même d'atteindre la page
+// Vue — un guest qui tente l'URL directement reçoit un 403, ça ne dépend pas
+// d'une vérification côté client qu'on pourrait contourner.
+Route::middleware(['auth', 'verified', 'role:receptionist'])->group(function () {
+    Route::inertia('/staff/bookings', 'staff/Bookings')->name('staff.bookings');
+    Route::inertia('/staff/rooms', 'staff/Rooms')->name('staff.rooms');
+    Route::inertia('/staff/team', 'staff/Team')->name('staff.team');
+});
+
+// Lien d'invitation envoyé à une nouvelle réceptionniste (voir
+// ReceptionistController::store()). Pas de middleware "auth" ici : la
+// personne qui clique n'a PAS encore de compte utilisable (son mot de passe
+// est aléatoire et inconnu d'elle) — c'est la signature cryptographique dans
+// l'URL elle-même (générée par URL::temporarySignedRoute, vérifiée par le
+// middleware "signed") qui prouve qu'elle a bien reçu ce lien par email,
+// pas un mot de passe. GET affiche le formulaire, POST le traite — les DEUX
+// passent par la même URL (donc la même signature), c'est pour ça que le
+// formulaire Vue soumet vers son URL actuelle plutôt que vers une route API séparée.
+Route::match(['get', 'post'], '/staff/set-password/{user}', SetPasswordController::class)
+    ->middleware('signed')
+    ->name('staff.set-password');
 
 // Vérification email — vérifie manuellement sans session ni token
 Route::get('/email/verify/{id}/{hash}', function (Request $request, string $id, string $hash) {
@@ -46,12 +63,12 @@ Route::get('/email/verify/{id}/{hash}', function (Request $request, string $id, 
     $user = User::findOrFail($id);
 
     // 2. Vérifie que le hash correspond à l'email de ce user
-    if (!hash_equals(sha1($user->getEmailForVerification()), $hash)) {
+    if (! hash_equals(sha1($user->getEmailForVerification()), $hash)) {
         abort(403, 'Invalid verification link.');
     }
 
     // 3. Vérifie que la signature n'est pas expirée/falsifiée
-    if (!$request->hasValidSignature()) {
+    if (! $request->hasValidSignature()) {
         abort(403, 'Link expired or invalid.');
     }
 
@@ -63,7 +80,7 @@ Route::get('/email/verify/{id}/{hash}', function (Request $request, string $id, 
     //    comme cette route le contourne entièrement (vérification "à la main"),
     //    on doit déclencher l'event nous-mêmes — et seulement la première fois,
     //    pas à chaque revisite du lien par un utilisateur déjà vérifié.
-    if (!$user->hasVerifiedEmail()) {
+    if (! $user->hasVerifiedEmail()) {
         $user->markEmailAsVerified();
         event(new Verified($user));
     }

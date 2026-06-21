@@ -13,7 +13,7 @@ class CreatePaymentIntentRequest extends FormRequest
 
     /**
      * Même règle d'autorisation que pour créer une réservation : seul un
-     * guest peut initier un paiement (pas de sens pour admin/receptionist).
+     * guest peut initier un paiement (pas de sens pour receptionist).
      */
     public function authorize(): bool
     {
@@ -26,8 +26,8 @@ class CreatePaymentIntentRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'room_id'   => $this->roomAvailabilityRules(),
-            'check_in'  => 'required|date|after:today',
+            'room_id' => $this->roomAvailabilityRules(),
+            'check_in' => 'required|date|after:today',
             'check_out' => 'required|date|after:check_in',
         ];
     }

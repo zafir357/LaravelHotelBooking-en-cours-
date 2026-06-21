@@ -6,11 +6,11 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreBookingRequest;
 use App\Http\Requests\UpdateBookingRequest;
 use App\Http\Resources\BookingResource;
-use App\Services\BookingService;
-use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
-use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use App\Models\Booking;
-use App\Models\User;
+use App\Services\BookingService;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+
 class BookingController extends Controller
 {
     public function __construct(
@@ -21,7 +21,7 @@ class BookingController extends Controller
     {
         $this->authorize('viewAny', Booking::class);
 
-        // Admin et receptionist voient tout, guest voit les siennes
+        // Receptionist voit tout, guest voit les siennes
         if (auth()->user()->isGuest()) {
             $bookings = $this->bookingService->getUserBookings(auth()->user()->id);
         } else {
@@ -44,15 +44,17 @@ class BookingController extends Controller
     public function update(UpdateBookingRequest $request, int $id): BookingResource
     {
         $booking = $this->bookingService->updateBooking($id, $request->validated());
+
         return new BookingResource($booking);
     }
 
-    public function destroy(int $id): \Illuminate\Http\JsonResponse
+    public function destroy(int $id): JsonResponse
     {
         $booking = $this->bookingService->findById($id);
         $this->authorize('delete', $booking);
 
         $this->bookingService->cancelBooking($id);
+
         return response()->json(['message' => 'Booking cancelled.']);
     }
 }

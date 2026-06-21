@@ -15,9 +15,13 @@ async function handleSubmit() {
     loading.value = true;
 
     try {
-        await login(email.value, password.value);
-        // Redirige vers la page d'accueil après login
-        router.visit('/');
+        // login() renvoie le user fraîchement récupéré via /api/me (voir
+        // useAuth.ts) — on s'en sert pour décider où l'envoyer : la
+        // réceptionniste va gérer les réservations, le client va sur son
+        // tableau de bord personnel. Il n'y a plus que ces deux rôles
+        // depuis la suppression du rôle admin.
+        const user = await login(email.value, password.value);
+        router.visit(user?.role === 'receptionist' ? '/staff/bookings' : '/dashboard');
     } catch (e: any) {
         error.value = e.response?.data?.message ?? 'Login failed.';
     } finally {

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Database\Factories\RoomFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -9,13 +10,13 @@ use Illuminate\Support\Carbon;
 
 class Room extends Model
 {
-    /** @use HasFactory<\Database\Factories\RoomFactory> */
+    /** @use HasFactory<RoomFactory> */
     use HasFactory;
 
     // Même bug que sur Booking : sans $fillable, Room::create($data) (utilisé
     // par RoomRepository::create(), donc StoreRoomRequest/RoomController::store())
-    // levait une MassAssignmentException — la création de chambre par un admin
-    // était cassée en pratique.
+    // levait une MassAssignmentException — la création de chambre par la
+    // réceptionniste était cassée en pratique.
     /**
      * @var list<string>
      */
@@ -30,10 +31,10 @@ class Room extends Model
     ];
 
     protected $casts = [
-    'images' => 'array',
-    'is_available' => 'boolean',
-    'price_per_night' => 'decimal:2',
-];
+        'images' => 'array',
+        'is_available' => 'boolean',
+        'price_per_night' => 'decimal:2',
+    ];
 
     /**
      * @return HasMany<Booking, $this>

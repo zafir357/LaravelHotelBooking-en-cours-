@@ -39,6 +39,18 @@ class PaymentService
             $intent = $this->stripe->paymentIntents->create([
                 'amount' => (int) round($amount * 100),
                 'currency' => 'eur',
+                // Par défaut, Stripe active automatiquement tous les moyens
+                // de paiement configurés sur le compte (carte, mais aussi
+                // Klarna, Bancontact, etc.), dont certains exigent une
+                // redirection hors de la page. 'allow_redirects' => 'never'
+                // les désactive : seuls les moyens de paiement qui peuvent
+                // se confirmer sans quitter la page (carte, dans notre cas)
+                // restent disponibles — cohérent avec le `redirect:
+                // 'if_required'` côté frontend (BookingDialog.vue).
+                'automatic_payment_methods' => [
+                    'enabled' => true,
+                    'allow_redirects' => 'never',
+                ],
                 'metadata' => [
                     'room_id' => (string) $room->id,
                     'check_in' => $checkIn,

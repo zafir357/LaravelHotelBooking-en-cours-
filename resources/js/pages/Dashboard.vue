@@ -126,7 +126,7 @@ async function cancelBooking(id: number) {
 
                 <template v-else>
                     <!-- Section 1 : en attente de validation par le staff
-                         (receptionist/admin) — voir /staff/bookings. -->
+                         (receptionist) — voir /staff/bookings. -->
                     <div v-if="pendingBookings.length" class="mb-8">
                         <h2 class="text-h6 font-weight-bold mb-3">Pending approval</h2>
                         <v-row>

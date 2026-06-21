@@ -16,7 +16,7 @@ interface Booking {
         type: string;
     };
     // Présent uniquement parce que BookingController::index() charge la
-    // relation "user" pour les requêtes admin/receptionist (voir
+    // relation "user" pour les requêtes receptionist (voir
     // BookingResource::toArray() — whenLoaded('user')). Optionnel ici par
     // sécurité côté TypeScript, même si en pratique toujours présent sur cette page.
     user?: {
@@ -30,8 +30,6 @@ const bookings = ref<Booking[]>([]);
 const loading = ref(true);
 const actionError = ref('');
 
-// "user" sert à savoir si on affiche le bouton "Cancel" (réservé à l'admin —
-// voir BookingPolicy::delete(), qui refuse ce rôle à un receptionist).
 const { user } = useAuth();
 
 const statusColors: Record<string, string> = {
@@ -70,7 +68,7 @@ async function completeBooking(booking: Booking) {
     }
 }
 
-// Annulation — admin et receptionist y ont droit (BookingPolicy::delete()),
+// Annulation — la receptionist y a droit (BookingPolicy::delete()),
 // tant que la réservation n'est pas déjà terminée/annulée.
 async function cancelBooking(booking: Booking) {
     if (!confirm('Cancel this booking?')) return;
@@ -155,12 +153,10 @@ async function cancelBooking(booking: Booking) {
 
                                 <v-spacer />
 
-                                <!-- Admin ET receptionist peuvent annuler (voir
-                                     BookingPolicy::delete()), mais pas une
-                                     réservation déjà annulée ou terminée — ça
-                                     n'aurait pas de sens. -->
+                                <!-- Pas une réservation déjà annulée ou
+                                     terminée — ça n'aurait pas de sens. -->
                                 <v-btn
-                                    v-if="(user?.role === 'admin' || user?.role === 'receptionist') && booking.status !== 'cancelled' && booking.status !== 'completed'"
+                                    v-if="user?.role === 'receptionist' && booking.status !== 'cancelled' && booking.status !== 'completed'"
                                     size="small"
                                     color="error"
                                     variant="text"

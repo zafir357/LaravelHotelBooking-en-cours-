@@ -40,17 +40,20 @@ onMounted(() => {
                 <v-btn variant="text" class="text-none mr-2" href="/#about">About</v-btn>
 
                 <template v-if="user">
-                    <!-- Lien visible uniquement pour le staff (admin/receptionist) —
-                         un guest n'a pas besoin de voir un lien vers une page que
-                         le middleware "role" lui interdirait de toute façon. -->
-                    <v-btn
-                        v-if="user.role === 'admin' || user.role === 'receptionist'"
-                        variant="text"
-                        class="text-none mr-2"
-                        href="/staff/bookings"
-                    >
-                        Manage bookings
-                    </v-btn>
+                    <!-- Liens visibles uniquement pour le staff (receptionist) —
+                         un guest n'a pas besoin de les voir, le middleware "role"
+                         les lui interdirait de toute façon. -->
+                    <template v-if="user.role === 'receptionist'">
+                        <v-btn variant="text" class="text-none mr-2" href="/staff/bookings">
+                            Manage bookings
+                        </v-btn>
+                        <v-btn variant="text" class="text-none mr-2" href="/staff/rooms">
+                            Manage rooms
+                        </v-btn>
+                        <v-btn variant="text" class="text-none mr-2" href="/staff/team">
+                            Team
+                        </v-btn>
+                    </template>
                     <v-btn variant="text" class="text-none mr-2" href="/dashboard">My bookings</v-btn>
                     <span class="text-body-2 mr-4">Hi, {{ user.name }}</span>
                     <v-btn variant="outlined" class="text-none" rounded="lg" @click="logout">

@@ -18,19 +18,19 @@ class RoomPolicy
         return true;
     }
 
-    // Seul admin peut créer/modifier/supprimer
+    // Seule la réceptionniste peut créer/modifier/supprimer une chambre.
     public function create(User $user): bool
     {
-        return $user->isAdmin();
+        return $user->isReceptionist();
     }
 
     public function update(User $user, Room $room): bool
     {
-        return $user->isAdmin();
+        return $user->isReceptionist();
     }
 
     public function delete(User $user, Room $room): bool
     {
-        return $user->isAdmin();
+        return $user->isReceptionist();
     }
 }

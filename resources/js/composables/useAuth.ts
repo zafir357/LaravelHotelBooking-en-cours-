@@ -24,7 +24,7 @@ interface User {
     id: number;
     name: string;
     email: string;
-    role: 'admin' | 'receptionist' | 'guest';
+    role: 'receptionist' | 'guest';
 }
 
 // `ref` partagé entre tous les composants qui utilisent useAuth
